@@ -21,15 +21,9 @@ A chatbot assistant for the Network State community that provides information fr
 ### Full Stack Setup (Frontend + Backend)
 
 1. Clone the repository
-2. Run the setup script to install all dependencies:
+2. Install all dependencies using npm:
    ```
-   ./setup.sh
-   ```
-   or install manually:
-   ```
-   npm install
-   cd backend && npm install
-   cd ../frontend && npm install
+   npm run install-all
    ```
 3. Create a `.env` file in the backend directory based on `.env.example` and add your Replicate API token:
    ```
@@ -119,6 +113,27 @@ To add a new context source:
 2. Add your content to the file
 3. Restart the server
 4. The new context will automatically be available via the API
+
+## Troubleshooting
+
+If you encounter errors when running the application:
+
+1. Make sure all dependencies are installed:
+   ```
+   npm run install-all
+   ```
+
+2. Check that the backend dependencies are properly installed:
+   ```
+   cd backend && npm install
+   ```
+
+3. Check that the frontend dependencies are properly installed:
+   ```
+   cd frontend && npm install
+   ```
+
+4. Ensure you have a valid Replicate API token in `backend/.env`
 
 ## License
 
