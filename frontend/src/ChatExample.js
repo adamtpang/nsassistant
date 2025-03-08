@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { sendMessage, getAvailableContexts, checkApiHealth } from './api';
+import React, { useState, useEffect, useRef } from 'react';
+import { sendMessage, getAvailableContexts, checkApiHealth, streamMessage } from './api';
+import './ChatExample.css';
 
 /**
  * Example Chat Component for Network State Assistant
@@ -14,6 +15,9 @@ function ChatExample() {
     const [selectedContexts, setSelectedContexts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [apiAvailable, setApiAvailable] = useState(false);
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [useStreaming, setUseStreaming] = useState(true);
+    const abortControllerRef = useRef(null);
 
     // Check API health and load available contexts on component mount
     useEffect(() => {
@@ -33,6 +37,15 @@ function ChatExample() {
         initialize();
     }, []);
 
+    // Cleanup streaming on unmount
+    useEffect(() => {
+        return () => {
+            if (abortControllerRef.current) {
+                abortControllerRef.current();
+            }
+        };
+    }, []);
+
     // Handle context selection
     const handleContextToggle = (context) => {
         if (selectedContexts.includes(context)) {
@@ -40,6 +53,11 @@ function ChatExample() {
         } else {
             setSelectedContexts([...selectedContexts, context]);
         }
+    };
+
+    // Handle streaming toggle
+    const handleStreamingToggle = () => {
+        setUseStreaming(!useStreaming);
     };
 
     // Handle form submission
@@ -51,13 +69,54 @@ function ChatExample() {
         setIsLoading(true);
         setResponse('');
 
-        try {
-            const chatResponse = await sendMessage(message, selectedContexts);
-            setResponse(chatResponse);
-        } catch (error) {
-            setResponse(`Error: ${error.message}`);
-        } finally {
+        if (useStreaming) {
+            // Use streaming API
+            setIsStreaming(true);
+
+            // Create a function to handle each chunk
+            const handleChunk = (chunk) => {
+                setResponse(prevResponse => prevResponse + chunk);
+            };
+
+            // Start streaming
+            abortControllerRef.current = streamMessage(
+                message,
+                selectedContexts,
+                handleChunk,
+                () => {
+                    // On complete
+                    setIsLoading(false);
+                    setIsStreaming(false);
+                    abortControllerRef.current = null;
+                },
+                (error) => {
+                    // On error
+                    setResponse(`Error: ${error.message}`);
+                    setIsLoading(false);
+                    setIsStreaming(false);
+                    abortControllerRef.current = null;
+                }
+            );
+        } else {
+            // Use regular API
+            try {
+                const chatResponse = await sendMessage(message, selectedContexts);
+                setResponse(chatResponse);
+            } catch (error) {
+                setResponse(`Error: ${error.message}`);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+    };
+
+    // Handle canceling a streaming request
+    const handleCancelStream = () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current();
+            abortControllerRef.current = null;
             setIsLoading(false);
+            setIsStreaming(false);
         }
     };
 
@@ -90,6 +149,17 @@ function ChatExample() {
                 </div>
             </div>
 
+            <div className="streaming-toggle">
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={useStreaming}
+                        onChange={handleStreamingToggle}
+                    />
+                    Use streaming (Claude 3.7 real-time response)
+                </label>
+            </div>
+
             <form onSubmit={handleSubmit}>
                 <textarea
                     value={message}
@@ -98,12 +168,24 @@ function ChatExample() {
                     rows={4}
                     disabled={isLoading}
                 />
-                <button type="submit" disabled={isLoading || !message.trim()}>
-                    {isLoading ? 'Thinking...' : 'Send'}
-                </button>
+                <div className="button-container">
+                    <button type="submit" disabled={isLoading || !message.trim()}>
+                        {isLoading ? 'Thinking...' : 'Send'}
+                    </button>
+                    {isStreaming && (
+                        <button
+                            type="button"
+                            className="cancel-button"
+                            onClick={handleCancelStream}
+                        >
+                            Cancel Stream
+                        </button>
+                    )}
+                </div>
             </form>
 
-            {isLoading && <div className="loading">Getting response...</div>}
+            {isLoading && !isStreaming && <div className="loading">Getting response...</div>}
+            {isStreaming && <div className="streaming">Streaming response...</div>}
 
             {response && (
                 <div className="response">
