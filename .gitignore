@@ -14,6 +14,10 @@ yarn-error.log
 # Build/production output
 /build
 /dist
+/frontend/build
+
+# Testing
+/coverage
 
 # Misc
 .DS_Store
@@ -22,3 +26,6 @@ yarn-error.log
 *.log
 *.tmp
 .cache
+
+# Local Netlify folder
+.netlify

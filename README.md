@@ -5,6 +5,7 @@ A chatbot assistant for the Network State community that provides information fr
 ## Features
 
 - Modular backend with swappable LLM models via Replicate
+- Claude 3.7 integration with streaming responses
 - Context-aware responses using Network State community data
 - API endpoints for chat interactions
 - Easy to extend with additional context sources
@@ -17,35 +18,72 @@ A chatbot assistant for the Network State community that provides information fr
 - npm or yarn
 - Replicate API token (get one at https://replicate.com)
 
-### Backend Setup
+### Full Stack Setup (Frontend + Backend)
 
 1. Clone the repository
-2. Navigate to the backend directory:
+2. Run the setup script to install all dependencies:
    ```
-   cd backend
+   ./setup.sh
    ```
-3. Install dependencies:
+   or install manually:
    ```
    npm install
+   cd backend && npm install
+   cd ../frontend && npm install
    ```
-4. Create a `.env` file based on `.env.example` and add your Replicate API token:
+3. Create a `.env` file in the backend directory based on `.env.example` and add your Replicate API token:
    ```
    PORT=3001
    REPLICATE_API_TOKEN=your_replicate_api_token_here
-   MODEL_VERSION=meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3
+   MODEL_VERSION=anthropic/claude-3.7-sonnet
    ```
-5. Start the server:
+4. Start both frontend and backend:
    ```
-   npm start
+   npm run dev
    ```
 
-The server will be running at http://localhost:3001
+The backend will be running at http://localhost:3001 and the frontend at http://localhost:3000
 
-### API Endpoints
+### Backend-Only Setup
+
+1. Navigate to the backend directory:
+   ```
+   cd backend
+   ```
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Create a `.env` file based on `.env.example` and add your Replicate API token
+4. Start the server:
+   ```
+   npm run dev
+   ```
+
+### Frontend-Only Setup
+
+1. Navigate to the frontend directory:
+   ```
+   cd frontend
+   ```
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Start the React development server:
+   ```
+   npm run dev
+   ```
+
+## API Endpoints
 
 - `POST /api/chat` - Send a message to the chatbot
   - Request body: `{ "message": "Your question here", "contextTypes": ["wiki", "calendar", "discord"] }`
   - Response: `{ "response": "Assistant's response" }`
+
+- `POST /api/chat/stream` - Stream a message response from the chatbot (Server-Sent Events)
+  - Request body: `{ "message": "Your question here", "contextTypes": ["wiki", "calendar", "discord"] }`
+  - Response: Stream of SSE events: `data: {"chunk": "text chunk"}`
 
 - `GET /api/chat/contexts` - Get available context types
   - Response: `{ "contexts": ["wiki", "calendar", "discord"] }`
@@ -53,13 +91,25 @@ The server will be running at http://localhost:3001
 - `GET /api/health` - Health check endpoint
   - Response: `{ "status": "ok", "message": "Server is running" }`
 
+## Testing
+
+- Test API endpoints:
+  ```
+  cd backend && npm run test:api
+  ```
+
+- Test Claude 3.7 integration:
+  ```
+  cd backend && npm run test:claude
+  ```
+
 ## Customizing the LLM Model
 
 You can easily swap out the LLM model by changing the `MODEL_VERSION` in your `.env` file. Some options include:
 
+- Claude 3.7 Sonnet: `anthropic/claude-3.7-sonnet`
+- Claude 3.5 Sonnet: `anthropic/claude-3.5-sonnet`
 - Llama 2 70B: `meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3`
-- Llama 2 13B: `a16z-infra/llama-2-13b-chat:2a7f981751ec7fdf87b5b91ad4db53683a98082e9ff7bfd12c8cd5ea85980a52`
-- Mistral 7B: `mistralai/mistral-7b-instruct-v0.1:83b6a56e7c828e667f21fd596c338fd4f0039b46bcfa18d973e8e70e455fda70`
 
 ## Adding New Context Sources
 
