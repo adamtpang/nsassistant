@@ -33,12 +33,11 @@ function ChatExample() {
     const [useStreaming, setUseStreaming] = useState(true);
     const abortControllerRef = useRef(null);
 
-    // Landing page integration
+    // Chat state
     const messagesEndRef = useRef(null);
     const [messages, setMessages] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(true);
     const [currentSuggestions, setCurrentSuggestions] = useState(INITIAL_SUGGESTIONS);
-    const [mounted, setMounted] = useState(false);
 
     // Check API health and load available contexts on component mount
     useEffect(() => {
@@ -56,7 +55,6 @@ function ChatExample() {
         }
 
         initialize();
-        setMounted(true);
     }, []);
 
     // Cleanup streaming on unmount
@@ -83,15 +81,6 @@ function ChatExample() {
             }
         }
     }, [messages]);
-
-    // Handle context selection
-    const handleContextToggle = (context) => {
-        if (selectedContexts.includes(context)) {
-            setSelectedContexts(selectedContexts.filter(c => c !== context));
-        } else {
-            setSelectedContexts([...selectedContexts, context]);
-        }
-    };
 
     // Handle input change
     const handleInputChange = (e) => {
@@ -219,16 +208,14 @@ function ChatExample() {
 
     if (!apiAvailable) {
         return (
-            <div className="chat-container error">
+            <div className="chat-container">
                 <div className="api-error">
                     <h2>API Not Available</h2>
-                    <p>The backend API is not available. Please make sure the server is running at http://localhost:3001</p>
+                    <p>The backend API is not available. Please make sure the server is running.</p>
                 </div>
             </div>
         );
     }
-
-    if (!mounted) return null;
 
     return (
         <div className="chat-container">
@@ -237,33 +224,29 @@ function ChatExample() {
                     <div className="welcome-container">
                         <div className="welcome-logo"></div>
                         <h1 className="welcome-title">Network Assistant</h1>
-                        <p className="welcome-subtitle">A Conversational Experience</p>
+                        <p className="welcome-subtitle">Ask about Network State concepts, events, and discussions</p>
 
                         <div className="context-selector">
-                            <h3>Select Context Sources:</h3>
-                            <div className="context-options">
-                                {contexts.map(context => (
-                                    <label key={context} className="context-label">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedContexts.includes(context)}
-                                            onChange={() => handleContextToggle(context)}
-                                        />
-                                        {context}
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="streaming-toggle">
-                            <label className="streaming-label">
-                                <input
-                                    type="checkbox"
-                                    checked={useStreaming}
-                                    onChange={() => setUseStreaming(!useStreaming)}
-                                />
-                                Enable streaming responses
-                            </label>
+                            {contexts.length > 0 && (
+                                <div className="context-options">
+                                    {contexts.map(context => (
+                                        <label key={context} className="context-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedContexts.includes(context)}
+                                                onChange={() => {
+                                                    if (selectedContexts.includes(context)) {
+                                                        setSelectedContexts(selectedContexts.filter(c => c !== context));
+                                                    } else {
+                                                        setSelectedContexts([...selectedContexts, context]);
+                                                    }
+                                                }}
+                                            />
+                                            {context}
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 ) : null}
@@ -318,6 +301,7 @@ function ChatExample() {
                             onChange={handleInputChange}
                             placeholder="Type your message..."
                             className="input-field"
+                            autoFocus
                         />
                         <button
                             type="submit"

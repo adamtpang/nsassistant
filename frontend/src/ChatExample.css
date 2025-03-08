@@ -14,8 +14,8 @@
     justify-content: center;
     height: 100%;
     padding: 2rem;
-    background-color: rgba(255, 0, 0, 0.1);
-    border-radius: 8px;
+    text-align: center;
+    color: #ff6b6b;
 }
 
 .messages-container {
@@ -63,23 +63,16 @@
 /* Context selector */
 .context-selector {
     margin: 1.5rem 0;
-    padding: 1.5rem;
+    padding: 1rem;
     background-color: rgba(30, 30, 30, 0.5);
     border-radius: 0.5rem;
-    width: 100%;
     max-width: 500px;
-}
-
-.context-selector h3 {
-    margin-top: 0;
-    margin-bottom: 1rem;
-    font-size: 1.2rem;
-    color: #fff;
 }
 
 .context-options {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 1rem;
 }
 
@@ -89,31 +82,32 @@
     gap: 0.5rem;
     color: #ccc;
     cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
 }
 
 .context-label:hover {
     color: #fff;
-}
-
-.streaming-toggle {
-    margin: 1rem 0;
-}
-
-.streaming-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #ccc;
-    cursor: pointer;
-}
-
-.streaming-label:hover {
-    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Message styles */
 .message {
     max-width: 85%;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .user-message {
@@ -142,7 +136,7 @@
 .message-content {
     margin-top: 0.25rem;
     font-size: 1.125rem;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .user-content {
@@ -176,20 +170,24 @@
 @keyframes pulse {
     0% {
         opacity: 0.6;
+        transform: scale(0.9);
     }
 
     50% {
         opacity: 1;
+        transform: scale(1);
     }
 
     100% {
         opacity: 0.6;
+        transform: scale(0.9);
     }
 }
 
 /* Input area */
 .input-area {
     border-top: 1px solid #222;
+    background-color: #111;
 }
 
 /* Suggestions */
@@ -200,6 +198,7 @@
 .suggestions-grid {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 0.5rem;
 }
 
@@ -216,7 +215,7 @@
 
 .suggestion-button:hover {
     background-color: #333;
-    color: #ddd;
+    color: #fff;
 }
 
 /* Input form */
@@ -228,17 +227,20 @@
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .input-field {
     flex: 1;
     min-width: 200px;
-    background-color: #111;
+    background-color: #222;
     border: 1px solid #333;
     border-radius: 9999px;
     color: #fff;
     padding: 0.75rem 1.5rem;
     font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input-field::placeholder {
@@ -247,7 +249,8 @@
 
 .input-field:focus {
     outline: none;
-    border-color: #fff;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
 }
 
 .send-button,
@@ -260,16 +263,16 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .send-button {
-    background-color: #fff;
-    color: #000;
+    background-color: #4a90e2;
+    color: white;
 }
 
 .send-button:hover:not(:disabled) {
-    background-color: #e0e0e0;
+    background-color: #2a70c2;
 }
 
 .send-button:disabled {
@@ -308,9 +311,5 @@
 
     .input-form {
         gap: 0.5rem;
-    }
-
-    .input-field {
-        min-width: 0;
     }
 }
