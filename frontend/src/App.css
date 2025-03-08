@@ -4,6 +4,31 @@
     min-height: 100vh;
 }
 
+/* Added for integrated landing page */
+.chat-main {
+    flex: 1;
+    padding: 0;
+    background-color: #000;
+    overflow: hidden;
+}
+
+/* Header info styling */
+.header-info {
+    color: #fff;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+/* Landing footer styling */
+.landing-footer {
+    background-color: #111;
+    color: #666;
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.8rem;
+    border-top: 1px solid #222;
+}
+
 .App-header {
     background-color: #282c34;
     padding: 20px;

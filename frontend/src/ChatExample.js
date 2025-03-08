@@ -2,6 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import { sendMessage, getAvailableContexts, checkApiHealth, streamMessage } from './api';
 import './ChatExample.css';
 
+// Sample suggestions
+const INITIAL_SUGGESTIONS = [
+    "Tell me about the Network State concept",
+    "What events are happening soon?",
+    "Show me recent Discord discussions",
+    "How do I join a Network State?",
+];
+
+const FOLLOW_UP_SUGGESTIONS = [
+    "Tell me more about that",
+    "How does this relate to blockchain?",
+    "What are some examples?",
+    "Who created this concept?"
+];
+
 /**
  * Example Chat Component for Network State Assistant
  *
@@ -10,7 +25,6 @@ import './ChatExample.css';
  */
 function ChatExample() {
     const [message, setMessage] = useState('');
-    const [response, setResponse] = useState('');
     const [contexts, setContexts] = useState([]);
     const [selectedContexts, setSelectedContexts] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +32,13 @@ function ChatExample() {
     const [isStreaming, setIsStreaming] = useState(false);
     const [useStreaming, setUseStreaming] = useState(true);
     const abortControllerRef = useRef(null);
+
+    // Landing page integration
+    const messagesEndRef = useRef(null);
+    const [messages, setMessages] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(true);
+    const [currentSuggestions, setCurrentSuggestions] = useState(INITIAL_SUGGESTIONS);
+    const [mounted, setMounted] = useState(false);
 
     // Check API health and load available contexts on component mount
     useEffect(() => {
@@ -35,6 +56,7 @@ function ChatExample() {
         }
 
         initialize();
+        setMounted(true);
     }, []);
 
     // Cleanup streaming on unmount
@@ -46,6 +68,22 @@ function ChatExample() {
         };
     }, []);
 
+    // Scroll to bottom of messages
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
+
+    // Reset suggestions after receiving a response
+    useEffect(() => {
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage.role === "assistant") {
+                setCurrentSuggestions(messages.length > 2 ? FOLLOW_UP_SUGGESTIONS : INITIAL_SUGGESTIONS);
+                setShowSuggestions(true);
+            }
+        }
+    }, [messages]);
+
     // Handle context selection
     const handleContextToggle = (context) => {
         if (selectedContexts.includes(context)) {
@@ -55,9 +93,20 @@ function ChatExample() {
         }
     };
 
-    // Handle streaming toggle
-    const handleStreamingToggle = () => {
-        setUseStreaming(!useStreaming);
+    // Handle input change
+    const handleInputChange = (e) => {
+        setMessage(e.target.value);
+        if (e.target.value === "") {
+            setShowSuggestions(true);
+        } else {
+            setShowSuggestions(false);
+        }
+    };
+
+    // Handle suggestion click
+    const handleSuggestionClick = (suggestion) => {
+        setMessage(suggestion);
+        setShowSuggestions(false);
     };
 
     // Handle form submission
@@ -66,8 +115,18 @@ function ChatExample() {
 
         if (!message.trim() || isLoading) return;
 
+        // Add user message to chat
+        const userMessage = {
+            id: Date.now().toString(),
+            role: "user",
+            content: message
+        };
+        setMessages(prev => [...prev, userMessage]);
+
+        // Clear input and show loading
+        setMessage("");
         setIsLoading(true);
-        setResponse('');
+        setShowSuggestions(false);
 
         if (useStreaming) {
             // Use streaming API
@@ -75,7 +134,24 @@ function ChatExample() {
 
             // Create a function to handle each chunk
             const handleChunk = (chunk) => {
-                setResponse(prevResponse => prevResponse + chunk);
+                setMessages(prevMessages => {
+                    const lastMessage = prevMessages[prevMessages.length - 1];
+
+                    // If there's already an assistant message, append to it
+                    if (lastMessage && lastMessage.role === "assistant") {
+                        return [
+                            ...prevMessages.slice(0, -1),
+                            { ...lastMessage, content: lastMessage.content + chunk }
+                        ];
+                    }
+                    // Otherwise create a new message
+                    else {
+                        return [
+                            ...prevMessages,
+                            { id: Date.now().toString(), role: "assistant", content: chunk }
+                        ];
+                    }
+                });
             };
 
             // Start streaming
@@ -91,7 +167,14 @@ function ChatExample() {
                 },
                 (error) => {
                     // On error
-                    setResponse(`Error: ${error.message}`);
+                    setMessages(prev => [
+                        ...prev,
+                        {
+                            id: Date.now().toString(),
+                            role: "assistant",
+                            content: `Error: ${error.message}. Please try again.`
+                        }
+                    ]);
                     setIsLoading(false);
                     setIsStreaming(false);
                     abortControllerRef.current = null;
@@ -101,9 +184,23 @@ function ChatExample() {
             // Use regular API
             try {
                 const chatResponse = await sendMessage(message, selectedContexts);
-                setResponse(chatResponse);
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now().toString(),
+                        role: "assistant",
+                        content: chatResponse
+                    }
+                ]);
             } catch (error) {
-                setResponse(`Error: ${error.message}`);
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: Date.now().toString(),
+                        role: "assistant",
+                        content: `Error: ${error.message}. Please try again.`
+                    }
+                ]);
             } finally {
                 setIsLoading(false);
             }
@@ -123,76 +220,125 @@ function ChatExample() {
     if (!apiAvailable) {
         return (
             <div className="chat-container error">
-                <h2>API Not Available</h2>
-                <p>The backend API is not available. Please make sure the server is running at http://localhost:3001</p>
+                <div className="api-error">
+                    <h2>API Not Available</h2>
+                    <p>The backend API is not available. Please make sure the server is running at http://localhost:3001</p>
+                </div>
             </div>
         );
     }
 
+    if (!mounted) return null;
+
     return (
         <div className="chat-container">
-            <h2>Network State Assistant</h2>
+            <div className="messages-container">
+                {messages.length === 0 ? (
+                    <div className="welcome-container">
+                        <div className="welcome-logo"></div>
+                        <h1 className="welcome-title">Network Assistant</h1>
+                        <p className="welcome-subtitle">A Conversational Experience</p>
 
-            <div className="context-selector">
-                <h3>Select Context Sources:</h3>
-                <div className="context-options">
-                    {contexts.map(context => (
-                        <label key={context}>
-                            <input
-                                type="checkbox"
-                                checked={selectedContexts.includes(context)}
-                                onChange={() => handleContextToggle(context)}
-                            />
-                            {context}
-                        </label>
-                    ))}
-                </div>
+                        <div className="context-selector">
+                            <h3>Select Context Sources:</h3>
+                            <div className="context-options">
+                                {contexts.map(context => (
+                                    <label key={context} className="context-label">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedContexts.includes(context)}
+                                            onChange={() => handleContextToggle(context)}
+                                        />
+                                        {context}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="streaming-toggle">
+                            <label className="streaming-label">
+                                <input
+                                    type="checkbox"
+                                    checked={useStreaming}
+                                    onChange={() => setUseStreaming(!useStreaming)}
+                                />
+                                Enable streaming responses
+                            </label>
+                        </div>
+                    </div>
+                ) : null}
+
+                {messages.map((message) => (
+                    <div key={message.id} className={`message ${message.role === "user" ? "user-message" : "assistant-message"}`}>
+                        <div className={`message-role ${message.role === "user" ? "user-role" : "assistant-role"}`}>
+                            {message.role === "user" ? "You" : "Network"}
+                        </div>
+                        <div className={`message-content ${message.role === "user" ? "user-content" : "assistant-content"}`}>
+                            {message.content}
+                        </div>
+                    </div>
+                ))}
+
+                {isLoading && (
+                    <div className="message assistant-message">
+                        <div className="message-role assistant-role">Network</div>
+                        <div className="message-content assistant-content">
+                            <span className="loading-dot"></span>
+                            <span className="loading-dot"></span>
+                            <span className="loading-dot"></span>
+                        </div>
+                    </div>
+                )}
+                <div ref={messagesEndRef} />
             </div>
 
-            <div className="streaming-toggle">
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={useStreaming}
-                        onChange={handleStreamingToggle}
-                    />
-                    Use streaming (Claude 3.7 real-time response)
-                </label>
-            </div>
+            <div className="input-area">
+                {/* Suggestions Section */}
+                {showSuggestions && !isLoading && messages.length > 0 && (
+                    <div className="suggestions-container">
+                        <div className="suggestions-grid">
+                            {currentSuggestions.map((suggestion, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => handleSuggestionClick(suggestion)}
+                                    className="suggestion-button"
+                                >
+                                    {suggestion}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
-            <form onSubmit={handleSubmit}>
-                <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Ask something about Network State..."
-                    rows={4}
-                    disabled={isLoading}
-                />
-                <div className="button-container">
-                    <button type="submit" disabled={isLoading || !message.trim()}>
-                        {isLoading ? 'Thinking...' : 'Send'}
-                    </button>
-                    {isStreaming && (
+                {/* Input Form */}
+                <div className="input-form-container">
+                    <form onSubmit={handleSubmit} className="input-form">
+                        <input
+                            value={message}
+                            onChange={handleInputChange}
+                            placeholder="Type your message..."
+                            className="input-field"
+                        />
                         <button
-                            type="button"
-                            className="cancel-button"
-                            onClick={handleCancelStream}
+                            type="submit"
+                            disabled={isLoading || !message.trim()}
+                            className="send-button"
                         >
-                            Cancel Stream
+                            <span className="send-icon"></span>
+                            Send
                         </button>
-                    )}
+                        {isStreaming && (
+                            <button
+                                type="button"
+                                className="cancel-button"
+                                onClick={handleCancelStream}
+                            >
+                                Cancel
+                            </button>
+                        )}
+                    </form>
                 </div>
-            </form>
-
-            {isLoading && !isStreaming && <div className="loading">Getting response...</div>}
-            {isStreaming && <div className="streaming">Streaming response...</div>}
-
-            {response && (
-                <div className="response">
-                    <h3>Response:</h3>
-                    <div className="response-content">{response}</div>
-                </div>
-            )}
+            </div>
         </div>
     );
 }

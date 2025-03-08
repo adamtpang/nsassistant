@@ -1,35 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './App.css';
 import ChatExample from './ChatExample';
-import LandingPage from './LandingPage';
+import './LandingPage.css'; // We'll use styling from the landing page
 
 function App() {
-    const [showChat, setShowChat] = useState(false);
-
     return (
-        <div className="App">
-            {showChat ? (
-                <>
-                    <header className="App-header">
-                        <h1>Network State Assistant</h1>
-                        <p>Context-aware AI assistant for the Network State community</p>
-                    </header>
-                    <main>
-                        <ChatExample />
-                    </main>
-                    <footer>
-                        <p>Powered by Claude 3.7 Sonnet via Replicate</p>
-                        <button
-                            className="back-button"
-                            onClick={() => setShowChat(false)}
-                        >
-                            Back to Landing Page
-                        </button>
-                    </footer>
-                </>
-            ) : (
-                <LandingPage onStartChat={() => setShowChat(true)} />
-            )}
+        <div className="landing-page">
+            {/* Header from landing page design */}
+            <header className="landing-header">
+                <button className="icon-button">
+                    <span className="menu-icon"></span>
+                </button>
+                <div className="logo-container">
+                    <div className="logo-image"></div>
+                    <span className="logo-text">Network Assistant</span>
+                </div>
+                <div className="header-info">
+                    <span>Powered by Claude 3.7 Sonnet</span>
+                </div>
+            </header>
+
+            {/* Main chat content */}
+            <main className="chat-main">
+                <ChatExample />
+            </main>
+
+            {/* Footer */}
+            <footer className="landing-footer">
+                <p>Network State LLM Assistant with context awareness for wiki, calendar, and Discord data</p>
+            </footer>
         </div>
     );
 }
