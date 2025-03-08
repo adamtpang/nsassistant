@@ -1,0 +1,31 @@
+Network State Community Calendar Events:
+
+1. Weekly Community Call
+   Date: Every Thursday
+   Time: 8:00 PM UTC
+   Description: Join our weekly community call to discuss Network State progress, share updates, and connect with other members.
+   Link: https://lu.ma/ns-weekly
+
+2. Governance Workshop
+   Date: June 15, 2023
+   Time: 6:00 PM UTC
+   Description: Learn about decentralized governance models and how they can be applied to Network States.
+   Link: https://lu.ma/ns-governance
+
+3. Technical Working Group
+   Date: Every Monday
+   Time: 7:00 PM UTC
+   Description: Technical discussion and development of Network State infrastructure.
+   Link: https://lu.ma/ns-tech
+
+4. Network State Summit
+   Date: September 10-12, 2023
+   Location: Virtual and San Francisco, CA
+   Description: Annual gathering of Network State builders, featuring keynotes, workshops, and networking.
+   Link: https://lu.ma/ns-summit
+
+5. Newcomer Orientation
+   Date: First Tuesday of each month
+   Time: 5:00 PM UTC
+   Description: Introduction to Network State concepts for newcomers.
+   Link: https://lu.ma/ns-intro
